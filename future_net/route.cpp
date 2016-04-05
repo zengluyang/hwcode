@@ -6,6 +6,7 @@
 #include <boost/config.hpp>
 #include <iostream>
 #include <fstream>
+#include <unordered_map>
 
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -75,75 +76,76 @@ void search_route(char *topo[5000], int edge_num, char *demand)
 	printf("\n");
 
 	const int num_nodes = biggest_node_id;
+	printf("biggest_node_id:%d\n",biggest_node_id);
 	graph_t g(edge_vector.begin(), edge_vector.end(), weight_vecotr.begin(), num_nodes);
 	property_map<graph_t, edge_weight_t>::type weightmap = get(edge_weight, g);
 	std::vector<vertex_descriptor> p(num_vertices(g));
 	std::vector<int> d(num_vertices(g));
-	int start_node =2;
-	vertex_descriptor s = vertex(start_node, g);
 
-	dijkstra_shortest_paths(g, s,
-	                        predecessor_map(boost::make_iterator_property_map(p.begin(), get(boost::vertex_index, g))).
-	                        distance_map(boost::make_iterator_property_map(d.begin(), get(boost::vertex_index, g))));
+	const int shortest_path_cache_num = must_visit_node_cnt+2;
 
-	std::cout << "distances and parents:" << std::endl;
-	graph_traits < graph_t >::vertex_iterator vi, vend;
-	for (boost::tie(vi, vend) = vertices(g); vi != vend; ++vi) {
-		std::cout << "distance(" << *vi << ") = " << d[*vi]<< ", ";
-		std::cout << "parent(" << *vi << ") = ";
-		int vp=p[*vi];
-		int i=3;
-		while(vp!=start_node&&vp!=*vi) {
-			std::cout<<vp<<" ";
-			vp=p[vp];
-			i--;
+	std::unordered_map<int,std::unordered_map<int,int > >src_dst_cost(num_nodes);
+	std::unordered_map<int,std::unordered_map<int,std::vector<int> > > src_dst_path(num_nodes);
+	// for(int i=0;i<num_nodes;i++) {
+	// 	src_dst_cost.push_back(std::vector<int>(num_nodes,0));
+	// }
+
+	// for(int i=0;i<num_nodes;i++) {
+	// 	std::vector<std::vector<int> > dest_path(num_nodes);
+	// 	for(int j=0;j<num_nodes;j++) {
+	// 		dest_path.push_back(std::vector<int>(num_nodes,0));
+	// 	}
+	// 	src_dst_path.push_back(dest_path);
+	// }
+
+
+	for(int i=0;i<must_visit_node_cnt;i++) {
+		int start_node = must_visit_nodes[i];
+		vertex_descriptor s = vertex(start_node, g);
+
+		dijkstra_shortest_paths(g, s,
+		                        predecessor_map(boost::make_iterator_property_map(p.begin(), get(boost::vertex_index, g))).
+		                        distance_map(boost::make_iterator_property_map(d.begin(), get(boost::vertex_index, g))));
+
+		graph_traits < graph_t >::vertex_iterator vi, vend;
+		for (boost::tie(vi, vend) = vertices(g); vi != vend; ++vi) {
+			printf("%d->%d\n",start_node,*vi);
+			src_dst_cost[start_node][*vi]=(int)d[*vi];
+			std::cout << "distance(" << *vi << ") = " << d[*vi]<< ", ";
+			int vp=p[*vi];
+			std::cout << "parent "; //<< vp << ") ";
+			//printf("vp:%d start_node:%d *vi%d vp!=start_node:%d vp!=(int)*vi:%d\n",vp,vi,vp!=start_node,vp!=(int)*vi);
+			while(vp!=start_node&&vp!=(int)*vi) {
+				src_dst_path[start_node][*vi].push_back(vp);
+				std::cout<<vp<<" ";
+				vp=p[vp];
+			}
+			std::cout<< std::endl;
 		}
-		std::cout<< std::endl;
-		std::cout<<"p ";
-		for(int i=0;i<p.size();i++) {
-			std::cout<<p[i]<<" ";
-		}
-		std::cout<<endl;
+		std::cout << std::endl;		
 	}
-	std::cout << std::endl;
+
+	for(auto srci=src_dst_cost.cbegin();srci!=src_dst_cost.cend();srci++) {
+		auto dest_cost = (*srci).second;
+		for(auto desti=dest_cost.cbegin();desti!=dest_cost.cend();desti++) {
+			printf("%d->%d: %d\n",(*srci).first,(*desti).first,desti->second);
+		}
+	}
+
+	printf("----------\n");
+	for(auto srci=src_dst_path.cbegin();srci!=src_dst_path.cend();srci++) {
+		auto dest_path = (*srci).second;
+		for(auto desti=dest_path.cbegin();desti!=dest_path.cend();desti++) {
+			auto src_dest_path = (*desti).second;
+			printf("%d->%d: ",(*srci).first,(*desti).first);
+			for(auto pathi=src_dest_path.cbegin();pathi!=src_dest_path.cend();pathi++) {
+				printf("%d,", *pathi);
+			}
+			printf("\n");
+		}
+	}
+
 
     for (int i = 0; i < 3; i++)
         record_result(result[i]);
-}
-
-
-void test_boost() {
-	using namespace boost;
-	typedef adjacency_list < listS, vecS, directedS,
-	  no_property, property < edge_weight_t, int > > graph_t;
-	typedef graph_traits < graph_t >::vertex_descriptor vertex_descriptor;
-	typedef std::pair<int, int> Edge;
-
-	const int num_nodes = 5;
-	enum nodes { A, B, C, D, E };
-	char name[] = "ABCDE";
-	Edge edge_array[] = { Edge(A, C), Edge(B, B), Edge(B, D), Edge(B, E),
-	  Edge(C, B), Edge(C, D), Edge(D, E), Edge(E, A), Edge(E, B)
-	};
-	int weights[] = { 1, 2, 1, 2, 7, 3, 1, 1, 1 };
-	int num_arcs = sizeof(edge_array) / sizeof(Edge);
-	graph_t g(edge_array, edge_array + num_arcs, weights, num_nodes);
-	property_map<graph_t, edge_weight_t>::type weightmap = get(edge_weight, g);
-	std::vector<vertex_descriptor> p(num_vertices(g));
-	std::vector<int> d(num_vertices(g));
-	vertex_descriptor s = vertex(A, g);
-
-	dijkstra_shortest_paths(g, s,
-	                        predecessor_map(boost::make_iterator_property_map(p.begin(), get(boost::vertex_index, g))).
-	                        distance_map(boost::make_iterator_property_map(d.begin(), get(boost::vertex_index, g))));
-
-	std::cout << "distances and parents:" << std::endl;
-	graph_traits < graph_t >::vertex_iterator vi, vend;
-	for (boost::tie(vi, vend) = vertices(g); vi != vend; ++vi) {
-	  std::cout << "distance(" << name[*vi] << ") = " << d[*vi] << ", ";
-	  std::cout << "parent(" << name[*vi] << ") = " << name[p[*vi]] << std::
-	    endl;
-	}
-	std::cout << std::endl;
-
 }
