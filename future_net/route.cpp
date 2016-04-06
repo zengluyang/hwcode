@@ -73,7 +73,7 @@ void search_route(char *topo[5000], int edge_num, char *demand)
 	}
 	printf("\n");
 
-	//----------2 ctor graph------------------------------
+	//-----------2 ctor graph----------------------------------------------
 	const int num_nodes = biggest_node_id;
 	printf("biggest_node_id:%d\n",biggest_node_id);
 	graph_t g(edge_vector.begin(), edge_vector.end(), weight_vecotr.begin(), num_nodes);
@@ -82,7 +82,8 @@ void search_route(char *topo[5000], int edge_num, char *demand)
 	std::vector<int> d(num_vertices(g));
 
 
-	//-----------3 cacl and store shortest path
+	//-----------3 cacl and sort shortest path------------------------------
+	//-----------3.1 cacl shortest path-------------------------------------
 	const int shortest_path_cache_num = must_visit_node_cnt+2;
 
 	std::unordered_map<int,std::unordered_map<int,int > >src_dst_cost(num_nodes);
@@ -116,7 +117,7 @@ void search_route(char *topo[5000], int edge_num, char *demand)
 		}
 	}
 
-
+	//------------------- 3.2 sort shortest path-----------------------------
 	for(auto srci=src_dst_cost.begin();srci!=src_dst_cost.end();srci++) {
 		auto dest_cost = (*srci).second;
 		src_dst_cost_ordered[(*srci).first]=std::vector<std::pair<int,int> >();
@@ -147,7 +148,7 @@ void search_route(char *topo[5000], int edge_num, char *demand)
 		}
 	}
 
-
+	//-------------------5 record result
     for (int i = 0; i < 3; i++)
         record_result(result[i]);
 }
