@@ -32,9 +32,7 @@ void search_route(char *topo[5000], int edge_num, char *demand)
 	//test_boost();
     unsigned short result[] = {2, 6, 3};//示例中的一个解
 
-
-
-
+    //------------1 parse input-------------------------
    	std::vector<Edge> edge_vector(edge_num);
    	std::vector<int> weight_vecotr(edge_num);
    	int biggest_node_id=0;
@@ -75,6 +73,7 @@ void search_route(char *topo[5000], int edge_num, char *demand)
 	}
 	printf("\n");
 
+	//----------2 ctor graph------------------------------
 	const int num_nodes = biggest_node_id;
 	printf("biggest_node_id:%d\n",biggest_node_id);
 	graph_t g(edge_vector.begin(), edge_vector.end(), weight_vecotr.begin(), num_nodes);
@@ -82,22 +81,13 @@ void search_route(char *topo[5000], int edge_num, char *demand)
 	std::vector<vertex_descriptor> p(num_vertices(g));
 	std::vector<int> d(num_vertices(g));
 
+
+	//-----------3 cacl and store shortest path
 	const int shortest_path_cache_num = must_visit_node_cnt+2;
 
 	std::unordered_map<int,std::unordered_map<int,int > >src_dst_cost(num_nodes);
+	std::unordered_map<int,std::vector<std::pair<int,int> > >src_dst_cost_ordered(num_nodes);
 	std::unordered_map<int,std::unordered_map<int,std::vector<int> > > src_dst_path(num_nodes);
-	// for(int i=0;i<num_nodes;i++) {
-	// 	src_dst_cost.push_back(std::vector<int>(num_nodes,0));
-	// }
-
-	// for(int i=0;i<num_nodes;i++) {
-	// 	std::vector<std::vector<int> > dest_path(num_nodes);
-	// 	for(int j=0;j<num_nodes;j++) {
-	// 		dest_path.push_back(std::vector<int>(num_nodes,0));
-	// 	}
-	// 	src_dst_path.push_back(dest_path);
-	// }
-
 
 	for(int i=0;i<must_visit_node_cnt;i++) {
 		int start_node = must_visit_nodes[i];
@@ -109,28 +99,40 @@ void search_route(char *topo[5000], int edge_num, char *demand)
 
 		graph_traits < graph_t >::vertex_iterator vi, vend;
 		for (boost::tie(vi, vend) = vertices(g); vi != vend; ++vi) {
-			printf("%d->%d\n",start_node,*vi);
-			src_dst_cost[start_node][*vi]=(int)d[*vi];
-			std::cout << "distance(" << *vi << ") = " << d[*vi]<< ", ";
-			int vp=p[*vi];
-			std::cout << "parent "; //<< vp << ") ";
-			//printf("vp:%d start_node:%d *vi%d vp!=start_node:%d vp!=(int)*vi:%d\n",vp,vi,vp!=start_node,vp!=(int)*vi);
-			while(vp!=start_node&&vp!=(int)*vi) {
-				src_dst_path[start_node][*vi].push_back(vp);
-				std::cout<<vp<<" ";
-				vp=p[vp];
+			//printf("%d->%d\n",start_node,*vi);
+			if(start_node!=(int)*vi) {
+					src_dst_cost[start_node][*vi]=(int)d[*vi];
+				
+				std::cout << "distance(" << *vi << ") = " << d[*vi]<< ", ";
+				int vp=p[*vi];
+				//std::cout << "parent "; //<< vp << ") ";
+				//printf("vp:%d start_node:%d *vi%d vp!=start_node:%d vp!=(int)*vi:%d\n",vp,vi,vp!=start_node,vp!=(int)*vi);
+				while(vp!=start_node&&vp!=(int)*vi) {
+					src_dst_path[start_node][*vi].push_back(vp);
+					//std::cout<<vp<<" ";
+					vp=p[vp];
+				}
 			}
-			std::cout<< std::endl;
 		}
-		std::cout << std::endl;		
 	}
 
-	for(auto srci=src_dst_cost.cbegin();srci!=src_dst_cost.cend();srci++) {
+
+	for(auto srci=src_dst_cost.begin();srci!=src_dst_cost.end();srci++) {
 		auto dest_cost = (*srci).second;
-		for(auto desti=dest_cost.cbegin();desti!=dest_cost.cend();desti++) {
+		src_dst_cost_ordered[(*srci).first]=std::vector<std::pair<int,int> >();
+		auto dest_cost_ordered=src_dst_cost_ordered[(*srci).first];
+		dest_cost_ordered.reserve(dest_cost.size());
+
+		for(auto desti=dest_cost.begin();desti!=dest_cost.end();desti++) {
 			printf("%d->%d: %d\n",(*srci).first,(*desti).first,desti->second);
+			dest_cost_ordered.push_back(std::pair<int,int>(desti->second,desti->first));
 		}
-	}
+		std::sort(dest_cost_ordered.begin(),dest_cost_ordered.end());
+		for(auto desti=dest_cost_ordered.begin();desti!=dest_cost_ordered.end();desti++) {
+			printf("ORDERED %d->%d: %d\n",(*srci).first,(*desti).second,desti->first);
+		}
+		printf("dest_cost.size():%d dest_cost_ordered.size():%d\n",dest_cost.size(),dest_cost_ordered.size());
+	}	
 
 	printf("----------\n");
 	for(auto srci=src_dst_path.cbegin();srci!=src_dst_path.cend();srci++) {

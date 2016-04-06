@@ -9,7 +9,7 @@ include_directories(${PROJECT_SOURCE_DIR}/lib)
 
 # 设置可执行文件生成路径
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/../bin)
-
+#SET (CMAKE_CXX_COMPILER             "/usr/bin/clang++")
 # 生成debug版本
 SET(CMAKE_BUILD_TYPE "Debug") 
 SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb -std=c++11")
