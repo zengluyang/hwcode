@@ -104,7 +104,7 @@ void search_route(char *topo[5000], int edge_num, char *demand)
 			if(start_node!=(int)*vi) {
 					src_dst_cost[start_node][*vi]=(int)d[*vi];
 				
-				std::cout << "distance(" << *vi << ") = " << d[*vi]<< ", ";
+				//std::cout << "distance(" << *vi << ") = " << d[*vi]<< ", ";
 				int vp=p[*vi];
 				//std::cout << "parent "; //<< vp << ") ";
 				//printf("vp:%d start_node:%d *vi%d vp!=start_node:%d vp!=(int)*vi:%d\n",vp,vi,vp!=start_node,vp!=(int)*vi);
@@ -125,7 +125,7 @@ void search_route(char *topo[5000], int edge_num, char *demand)
 		dest_cost_ordered.reserve(dest_cost.size());
 
 		for(auto desti=dest_cost.begin();desti!=dest_cost.end();desti++) {
-			printf("%d->%d: %d\n",(*srci).first,(*desti).first,desti->second);
+			printf("UNORDER %d->%d: %d\n",(*srci).first,(*desti).first,desti->second);
 			dest_cost_ordered.push_back(std::pair<int,int>(desti->second,desti->first));
 		}
 		std::sort(dest_cost_ordered.begin(),dest_cost_ordered.end());
