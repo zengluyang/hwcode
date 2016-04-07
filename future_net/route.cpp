@@ -18,11 +18,10 @@
 using namespace boost;
 using namespace std;
 
-
 void test_boost();
 
 //你要完成的功能总入口
-
+#define printf
     
 typedef adjacency_list < vecS, vecS, directedS,
   no_property, property < edge_weight_t, int > > graph_t;
@@ -122,7 +121,7 @@ void search_route(char *topo[5000], int edge_num, char *demand)
 						) {
 					//printf("55555\n");
 					src_dst_cost[start_node][*vi]=(int)d[*vi];
-					//std::cout << "distance(" << *vi << ") = " << d[*vi]<< ", ";
+					printf("%d->%d:%d\n",start_node,(int)*vi,(int)d[*vi]);
 					int vp=p[*vi];
 
 					if(start_node==18&&(int)*vi==15) {
@@ -135,10 +134,16 @@ void search_route(char *topo[5000], int edge_num, char *demand)
 					if(vp!=start_node&&vp!=(int)*vi) {
 						src_dst_path[start_node][*vi].push_back(start_node);
 					}
+					std::vector<int> reverse_path;
+					reverse_path.reserve(num_nodes);
 					while(vp!=start_node&&vp!=(int)*vi) {
-						src_dst_path[start_node][*vi].push_back(vp);
+
+						reverse_path.push_back(vp);
 						//std::cout<<vp<<" ";
 						vp=p[vp];
+					}
+					for(auto it=reverse_path.rbegin();it!=reverse_path.rend();it++) {
+						src_dst_path[start_node][*vi].push_back(*it);
 					}
 					if(!src_dst_path[start_node][*vi].empty()) {
 						//src_dst_path[start_node][*vi].push_back((int)*vi);
@@ -322,3 +327,5 @@ init:
 	}
 
 }
+
+#undef printf
